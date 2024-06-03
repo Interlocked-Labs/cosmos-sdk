@@ -63,6 +63,7 @@ type BaseViewKeeper struct {
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
+	SupplyOffset  collections.Map[string, math.Int]
 	DenomMetadata collections.Map[string, types.Metadata]
 	SendEnabled   collections.Map[string, bool]
 	Balances      *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], math.Int, BalancesIndexes]
