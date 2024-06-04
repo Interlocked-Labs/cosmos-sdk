@@ -190,6 +190,11 @@ func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *
 	suite.authKeeper.EXPECT().HasAccount(suite.ctx, receiver.GetAddress()).Return(true)
 }
 
+func (suite *KeeperTestSuite) mockSendCoinsFromModuleToManyAccounts(sender *authtypes.ModuleAccount) {
+	suite.authKeeper.EXPECT().GetModuleAddress(sender.Name).Return(sender.GetAddress())
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, sender.GetAddress()).Return(sender)
+}
+
 func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
@@ -199,6 +204,10 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.Ba
 func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true)
+}
+
+func (suite *KeeperTestSuite) mockSendManyCoins(ctx context.Context, sender sdk.AccountI) {
+	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 }
 
 func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
