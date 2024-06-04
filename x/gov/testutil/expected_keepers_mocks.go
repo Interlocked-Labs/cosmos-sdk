@@ -1052,6 +1052,21 @@ func (mr *MockBankKeeperMockRecorder) SupplyOf(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SupplyOf", reflect.TypeOf((*MockBankKeeper)(nil).SupplyOf), arg0, arg1)
 }
 
+// SupplyOfWithoutOffset mocks base method.
+func (m *MockBankKeeper) SupplyOfWithoutOffset(arg0 context.Context, arg1 *types0.QuerySupplyOfWithoutOffsetRequest) (*types0.QuerySupplyOfWithoutOffsetResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SupplyOfWithoutOffset", arg0, arg1)
+	ret0, _ := ret[0].(*types0.QuerySupplyOfWithoutOffsetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SupplyOfWithoutOffset indicates an expected call of SupplyOfWithoutOffset.
+func (mr *MockBankKeeperMockRecorder) SupplyOfWithoutOffset(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SupplyOfWithoutOffset", reflect.TypeOf((*MockBankKeeper)(nil).SupplyOfWithoutOffset), arg0, arg1)
+}
+
 // TotalSupply mocks base method.
 func (m *MockBankKeeper) TotalSupply(arg0 context.Context, arg1 *types0.QueryTotalSupplyRequest) (*types0.QueryTotalSupplyResponse, error) {
 	m.ctrl.T.Helper()
@@ -1065,6 +1080,21 @@ func (m *MockBankKeeper) TotalSupply(arg0 context.Context, arg1 *types0.QueryTot
 func (mr *MockBankKeeperMockRecorder) TotalSupply(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalSupply", reflect.TypeOf((*MockBankKeeper)(nil).TotalSupply), arg0, arg1)
+}
+
+// TotalSupplyWithoutOffset mocks base method.
+func (m *MockBankKeeper) TotalSupplyWithoutOffset(arg0 context.Context, arg1 *types0.QueryTotalSupplyWithoutOffsetRequest) (*types0.QueryTotalSupplyWithoutOffsetResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TotalSupplyWithoutOffset", arg0, arg1)
+	ret0, _ := ret[0].(*types0.QueryTotalSupplyWithoutOffsetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TotalSupplyWithoutOffset indicates an expected call of TotalSupplyWithoutOffset.
+func (mr *MockBankKeeperMockRecorder) TotalSupplyWithoutOffset(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalSupplyWithoutOffset", reflect.TypeOf((*MockBankKeeper)(nil).TotalSupplyWithoutOffset), arg0, arg1)
 }
 
 // UndelegateCoins mocks base method.

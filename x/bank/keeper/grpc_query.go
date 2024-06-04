@@ -136,10 +136,10 @@ func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.Quer
 	return &types.QuerySpendableBalanceByDenomResponse{Balance: &spendable}, nil
 }
 
-// TotalSupply implements the Query/TotalSupply gRPC method
+// TotalSupply implements the Query/TotalSupply gRPC method, this has been overwritten to include offset.
 func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupplyWithOffsets(sdkCtx, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -147,8 +147,41 @@ func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupply
 	return &types.QueryTotalSupplyResponse{Supply: totalSupply, Pagination: pageRes}, nil
 }
 
-// SupplyOf implements the Query/SupplyOf gRPC method
+// SupplyOf implements the Query/SupplyOf gRPC method, this has been overwritten to include offset.
 func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	supply := k.GetSupplyWithOffset(ctx, req.Denom)
+
+	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
+}
+
+// TotalSupplyWithoutOffset implements the Query/TotalSupplyWithoutOffset gRPC method.
+func (k BaseKeeper) TotalSupplyWithoutOffset(
+	ctx context.Context,
+	req *types.QueryTotalSupplyWithoutOffsetRequest,
+) (*types.QueryTotalSupplyWithoutOffsetResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryTotalSupplyWithoutOffsetResponse{Supply: totalSupply, Pagination: pageRes}, nil
+}
+
+// SupplyOfWithoutOffset implements the Query/SupplyOfWithoutOffset gRPC method.
+func (k BaseKeeper) SupplyOfWithoutOffset(
+	c context.Context,
+	req *types.QuerySupplyOfWithoutOffsetRequest,
+) (*types.QuerySupplyOfWithoutOffsetResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -160,7 +193,7 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 	ctx := sdk.UnwrapSDKContext(c)
 	supply := k.GetSupply(ctx, req.Denom)
 
-	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
+	return &types.QuerySupplyOfWithoutOffsetResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
 }
 
 // Params implements the gRPC service handler for querying x/bank parameters.
