@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// Implements StakingHooks interface
+// Implements BankHooks interface
 var _ types.BankHooks = BaseSendKeeper{}
 
 // TrackBeforeSend executes the TrackBeforeSend hook if registered.
