@@ -228,10 +228,19 @@ func (k BaseSendKeeper) sendCoins(
 	ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
 
+	if !amt.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+	}
+
+	toAddr, err := k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
+	if err != nil {
+		return err
+	}
+
 	// call the TrackBeforeSend hooks
 	k.TrackBeforeSend(ctx, fromAddr, toAddr, amt)
 
-	err := k.subUnlockedCoins(ctx, fromAddr, amt)
+	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -289,10 +298,20 @@ func (k BaseSendKeeper) SendManyCoins(ctx context.Context, fromAddr sdk.AccAddre
 
 	totalAmt := sdk.Coins{}
 	for i, amt := range amts {
+
+		// Apply restriction to each individual address and overwrite the toAddr if need be
+		toAddr, err := k.sendRestriction.apply(ctx, fromAddr, toAddrs[i], amts[i])
+		if err != nil {
+			return err
+		}
+
+		// Overwrite it with the new restrictive address
+		toAddrs[i] = toAddr
+
 		// make sure to trigger the BeforeSend hooks for all the sends that are about to occur
 		k.TrackBeforeSend(ctx, fromAddr, toAddrs[i], amts[i])
 
-		err := k.BlockBeforeSend(ctx, fromAddr, toAddrs[i], amts[i])
+		err = k.BlockBeforeSend(ctx, fromAddr, toAddrs[i], amts[i])
 		if err != nil {
 			return err
 		}
@@ -314,13 +333,6 @@ func (k BaseSendKeeper) SendManyCoins(ctx context.Context, fromAddr sdk.AccAddre
 		if err != nil {
 			return err
 		}
-
-		// Not needed for epoch code, every user must have an account
-		// acc := k.ak.GetAccount(ctx, toAddr)
-		// if acc == nil {
-		// 	defer telemetry.IncrCounter(1, "new", "account")
-		// 	k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
-		// }
 
 		sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
 			types.EventTypeTransfer,
