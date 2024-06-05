@@ -52,18 +52,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
 				{
-					RpcMethod: "TotalSupplyWithoutOffset",
-					Use:       "total-supply-without-offset",
-					Short:     "Query the total supply of coins of the chain without the offset",
-					Long:      "Query total supply of coins that are held by accounts in the chain without the offset. To query for the total supply of a specific coin denomination use --denom flag.",
-				},
-				{
-					RpcMethod:      "SupplyOfWithoutOffset",
-					Use:            "total-supply-of-without-offset [denom]",
-					Short:          "Query the supply of a single coin denom without the offset",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
-				},
-				{
 					RpcMethod: "Params",
 					Use:       "params",
 					Short:     "Query the current bank parameters",
