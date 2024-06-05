@@ -36,7 +36,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [fresco/v0.50.5]
+
+### Features
+
+* (x/bank) [#1](https://github.com/Interlocked-Labs/cosmos-sdk/pull/1) Adding Supply Offset for token minting/burning not part actual supply.
+
+## [v0.50.5]
 
 ## Bug Fixes
 
