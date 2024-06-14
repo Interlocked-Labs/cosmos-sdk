@@ -32,6 +32,9 @@ var (
 
 	// ParamsKey is the prefix for x/bank parameters
 	ParamsKey = collections.NewPrefix(5)
+
+	// SupplyOffsetKey is the key used to store the supply offset data.
+	SupplyOffsetKey = collections.NewPrefix(6)
 )
 
 // BalanceValueCodec is a codec for encoding bank balances in a backwards compatible way.

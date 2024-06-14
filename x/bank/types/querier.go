@@ -7,10 +7,12 @@ import (
 
 // Querier path constants
 const (
-	QueryBalance     = "balance"
-	QueryAllBalances = "all_balances"
-	QueryTotalSupply = "total_supply"
-	QuerySupplyOf    = "supply_of"
+	QueryBalance                  = "balance"
+	QueryAllBalances              = "all_balances"
+	QueryTotalSupply              = "total_supply"
+	QueryTotalSupplyWithoutOffset = "total_supply_without_offset"
+	QuerySupplyOf                 = "supply_of"
+	QuerySupplyOfWithoutOffset    = "supply_of_without_offset"
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
@@ -56,4 +58,27 @@ type QuerySupplyOfParams struct {
 // of a given denomination
 func NewQuerySupplyOfParams(denom string) QuerySupplyOfParams {
 	return QuerySupplyOfParams{denom}
+}
+
+// QueryTotalSupplyWithoutOffsetParams defines the params for the following queries:
+// - 'custom/bank/totalSupplyWithoutOffset'
+type QueryTotalSupplyWithoutOffsetParams struct {
+	Page, Limit int
+}
+
+// NewQueryTotalSupplyWithoutOffsetParams creates a new instance to query the total supply without offset.
+func NewQueryTotalSupplyWithoutOffsetParams(page, limit int) QueryTotalSupplyWithoutOffsetParams {
+	return QueryTotalSupplyWithoutOffsetParams{page, limit}
+}
+
+// QuerySupplyOfWithoutOffsetParams defines the params for the following queries:
+// - 'custom/bank/totalSupplyOfWithoutOffset'
+type QuerySupplyOfWithoutOffsetParams struct {
+	Denom string
+}
+
+// NewQuerySupplyOfWithoutOffsetParams creates a new instance to query the total supply
+// of a given denomination without offset.
+func NewQuerySupplyOfWithoutOffsetParams(denom string) QuerySupplyOfWithoutOffsetParams {
+	return QuerySupplyOfWithoutOffsetParams{denom}
 }

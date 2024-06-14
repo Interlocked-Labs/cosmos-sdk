@@ -23,6 +23,7 @@ This module is used in the Cosmos Hub.
 
 * [Supply](#supply)
     * [Total Supply](#total-supply)
+    * [SupplyOffset](#supply-offset)
 * [Module Accounts](#module-accounts)
     * [Permissions](#permissions)
 * [State](#state)
@@ -55,6 +56,10 @@ The total `Supply` of the network is equal to the sum of all coins from the
 account. The total supply is updated every time a `Coin` is minted (eg: as part
 of the inflation mechanism) or burned (eg: due to slashing or if a governance
 proposal is vetoed).
+
+### Supply Offset
+
+The `SupplyOffset` tracks the minted/burned tokens in the network that do not form part of the main tokens circulating supply. E.G If a module wants to mint extra tokens and delegate it to a validator, does are not to be counted as part of the main supply and will be offset using this variable. When querying `TotalSupply` or `SupplyOf` we will be given supplies which are offset using this variable per token. Additional queries have been given to query `TotalSupply` and `SupplyOf` without the offsets.
 
 ## Module Accounts
 

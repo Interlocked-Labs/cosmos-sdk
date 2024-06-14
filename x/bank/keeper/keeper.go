@@ -32,6 +32,11 @@ type Keeper interface {
 	HasSupply(ctx context.Context, denom string) bool
 	GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupply(ctx context.Context, cb func(sdk.Coin) bool)
+	GetSupplyOffset(ctx context.Context, denom string) math.Int
+	AddSupplyOffset(ctx context.Context, denom string, offsetAmount math.Int)
+	GetSupplyWithOffset(ctx context.Context, denom string) sdk.Coin
+	GetPaginatedTotalSupplyWithOffsets(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
+	IterateTotalSupplyWithOffsets(ctx context.Context, cb func(sdk.Coin) bool)
 	GetDenomMetaData(ctx context.Context, denom string) (types.Metadata, bool)
 	HasDenomMetaData(ctx context.Context, denom string) bool
 	SetDenomMetaData(ctx context.Context, denomMetaData types.Metadata)
@@ -39,6 +44,9 @@ type Keeper interface {
 	IterateAllDenomMetaData(ctx context.Context, cb func(types.Metadata) bool)
 
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToManyAccounts(
+		ctx context.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
+	) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
@@ -131,6 +139,14 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	err := k.BlockBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	k.TrackBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
+
 	balances := sdk.NewCoins()
 
 	for _, coin := range amt {
@@ -157,7 +173,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		types.NewCoinSpentEvent(delegatorAddr, amt),
 	)
 
-	err := k.addCoins(ctx, moduleAccAddr, amt)
+	err = k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -180,7 +196,15 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	err := k.BlockBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	k.TrackBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
+
+	err = k.subUnlockedCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -271,8 +295,34 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
+// SendCoinsFromModuleToManyAccounts transfers coins from a ModuleAccount to multiple AccAddresses.
+// It will panic if the module account does not exist. An error is returned if
+// the recipient address is black-listed or if sending the tokens fails.
+func (k BaseKeeper) SendCoinsFromModuleToManyAccounts(
+	ctx context.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
+) error {
+	if len(recipientAddrs) != len(amts) {
+		panic(fmt.Errorf("addresses and amounts numbers does not match"))
+	}
+
+	senderAddr := k.ak.GetModuleAddress(senderModule)
+	if senderAddr == nil {
+		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
+	}
+
+	for _, recipientAddr := range recipientAddrs {
+		if k.BlockedAddr(recipientAddr) {
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipientAddr)
+		}
+	}
+
+	return k.SendManyCoins(ctx, senderAddr, recipientAddrs, amts)
+}
+
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.
 // It will panic if either module account does not exist.
+// SendCoinsFromModuleToModule is the only send method that does not call both BlockBeforeSend and TrackBeforeSend hook.
+// It only calls the TrackBeforeSend hook.
 func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx context.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {
@@ -286,7 +336,7 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
-	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+	return k.SendCoinsWithoutBlockHook(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.
