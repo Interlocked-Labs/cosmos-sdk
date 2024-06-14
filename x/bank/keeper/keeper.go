@@ -139,11 +139,12 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
 	err := k.BlockBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
-	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+
 	k.TrackBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
 
 	balances := sdk.NewCoins()
